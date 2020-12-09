@@ -1,0 +1,180 @@
+using System;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.IO;
+using System.Linq;
+using System.Linq.Expressions;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace AOC_2020_Day9
+{
+    class Program
+    {
+
+        public static class DecryptTools
+        {
+
+            public static List<long> findRange(long expectedResult, string[] code)
+            {
+               
+
+                for(int startLine = 0; startLine < (code.Length -1); startLine++)
+                {
+
+                    long firstNumber = Convert.ToInt64(code[startLine]);
+
+                    int lastLine = startLine + 1;
+
+                    
+
+                    while (lastLine < code.Length)
+                    {
+                        
+                        List<long> resultList = new List<long>();
+                        resultList.Add(firstNumber);
+
+                        long result = firstNumber;
+
+
+
+                        // Add up all numbers between firstLine and lastLine
+
+              
+                        for (int line = startLine+1; line <= lastLine; line++)
+                        {
+                            long currentNUmber = Convert.ToInt64(code[line]);
+
+                            result += currentNUmber;
+
+                            resultList.Add(currentNUmber);
+
+                            if (result == expectedResult)
+                            {
+                                // Just needed to return something
+                                return resultList;
+                            }
+
+                            if (result > expectedResult)
+                            {
+                                break;
+                            }
+
+                        }
+
+
+
+                        // Give up this run, try the next
+                        lastLine++;
+                        continue;
+                    }
+
+
+
+
+
+
+                }
+
+                throw new Exception();
+            }
+
+
+
+            public static bool isValid(int preamble, int position, string[] code)
+            {
+                string[] strPreamble = cutString(preamble, position, code);
+
+                long currentNumber = Convert.ToInt64(code[position]);
+
+                for (int firstNumberLine = 0; firstNumberLine < strPreamble.Length; firstNumberLine++)
+                {
+                    long firstNumber = Convert.ToInt64(strPreamble[firstNumberLine]);
+
+                    for (int secondNumberLine = 0; secondNumberLine < strPreamble.Length; secondNumberLine++)
+                    {
+                        long secondNumber = Convert.ToInt64(strPreamble[secondNumberLine]);
+
+                        // Don't add same number twice
+                        if (firstNumberLine == secondNumberLine) continue;
+
+
+                        long totalTwo = firstNumber + secondNumber;
+
+                        if (totalTwo == currentNumber) return true;
+
+                    }
+
+
+                }
+
+                return false;
+            }
+
+
+            /// <summary>
+            /// Cuts the string, returning only x places PRIOR to the position
+            /// </summary>
+            /// <param name="length"></param>
+            /// <param name="position"></param>
+            /// <returns></returns>
+            public static string[] cutString(int preamble, int position, string[] code)
+            {
+
+                int ignoreLines = position - preamble;
+                if (ignoreLines < 1) ignoreLines = 0;
+
+                return code.Skip(ignoreLines).Take(preamble).ToArray();
+
+            }
+
+        }
+
+
+        static void Main(string[] args)
+        {
+            System.Diagnostics.Stopwatch stopwatch = new Stopwatch();
+            stopwatch.Start();
+            
+
+            string[] input = File.ReadAllLines("aoc-2020-day9-input.txt");
+
+            int dataPreamble = 25;
+
+
+            for (int i = dataPreamble; i < input.Length; i++)
+            {
+
+                Console.WriteLine("Testing Line " + i + " [" + input[i] + "]");
+
+                bool result = DecryptTools.isValid(dataPreamble, i, input);
+
+                if (result)
+                {
+                    Console.WriteLine("      VALID");
+                }
+                else
+                {
+
+                    Console.WriteLine("Invalid Data Found After " + stopwatch.Elapsed.TotalSeconds + " seconds");
+
+                    var findWeakness = DecryptTools.findRange(Convert.ToInt64(input[i]), input);
+
+                    Console.WriteLine("Weakness Data Found After " + stopwatch.Elapsed.TotalSeconds + " seconds");
+
+                    long weakness = findWeakness.Min() + findWeakness.Max();
+
+                    Console.Write("Weakness: " + weakness);
+
+
+                }
+
+
+            }
+
+            var test = DecryptTools.cutString(dataPreamble, 15, input);
+
+            Console.ReadLine();
+        }
+    }
+}
