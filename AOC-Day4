@@ -1,0 +1,194 @@
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Text.RegularExpressions;
+
+namespace AOC_2020_Day4
+{
+    public static class PassportTools
+    {
+        private enum PasswordProperty { byr, iyr, eyr, hgt, hcl, ecl, pid}
+
+        public static bool ValidatePassport(string passport)
+        {
+            foreach (PasswordProperty passwordProperty in Enum.GetValues(typeof(PasswordProperty)))
+            {
+                string propertyValue = GetPropertyValue(passport, passwordProperty);
+
+
+                switch (passwordProperty)
+                {
+                    case PasswordProperty.byr:
+
+                        if (!ValidateBYR(propertyValue)) return false;
+                        break;
+                    case PasswordProperty.iyr:
+                        if (!ValidateIYR(propertyValue)) return false;
+                        break;
+                    case PasswordProperty.eyr:
+                        if (!ValidateEYR(propertyValue)) return false;
+                        break;
+                    case PasswordProperty.hgt:
+                        if (!ValidateHGT(propertyValue)) return false;
+                        break;
+                    case PasswordProperty.hcl:
+                        if (!ValidateHCL(propertyValue)) return false;
+                        break;
+                    case PasswordProperty.ecl:
+                        if (!ValidateECL(propertyValue)) return false;
+                        break;
+                    case PasswordProperty.pid:
+                        if (!ValidatePID(propertyValue)) return false;
+                        break;
+                    default:
+                        throw new ArgumentOutOfRangeException();
+                }
+
+            }
+
+            return true;
+        }
+
+        private static bool ValidateBYR(string value)
+        {
+            return ValidateNumber(value, 1920, 2002);
+        }
+
+        private static bool ValidateIYR(string value)
+        {
+            return ValidateNumber(value, 2010, 2020);
+        }
+
+        private static bool ValidateEYR(string value)
+        {
+            return ValidateNumber(value, 2020, 2030);
+        }
+
+
+        private static bool ValidateHGT(string value)
+        {
+
+            string regex = "(?<number>[0-9]+)(?<unit>in|cm)";
+            RegexOptions options = RegexOptions.Singleline | RegexOptions.IgnoreCase;
+            var match = Regex.Match(value, regex, options);
+
+            string strnumber = match.Groups["number"].Value;
+            string unit = match.Groups["unit"].Value;
+
+            if (string.IsNullOrWhiteSpace(strnumber)) return false;
+            if (string.IsNullOrWhiteSpace(unit)) return false;
+
+            switch (unit)
+            {
+                case "in":
+                    return ValidateNumber(strnumber, 59, 76);
+
+                case "cm":
+                    return ValidateNumber(strnumber, 150, 193);
+            }
+
+            return false;
+        }
+
+        private static bool ValidateHCL(string value)
+        {
+            string regex = "#([0-9a-f]){6}";
+            RegexOptions options = RegexOptions.Singleline | RegexOptions.IgnoreCase;
+            var match = Regex.Match(value, regex, options);
+
+            return match.Success;
+
+        }
+
+        private static bool ValidateECL(string value)
+        {
+            List<string> acceptableValues = new List<string>();
+
+            acceptableValues.Add("amb");
+            acceptableValues.Add("blu");
+            acceptableValues.Add("brn");
+            acceptableValues.Add("gry");
+            acceptableValues.Add("grn");
+            acceptableValues.Add("hzl");
+            acceptableValues.Add("oth");
+
+            foreach (string acceptableValue in acceptableValues)
+            {
+                if (value == acceptableValue) return true;
+            }
+
+            return false;
+        }
+
+        private static bool ValidatePID(string value)
+        {
+            string regex = "^([0-9]){9}$";
+            RegexOptions options = RegexOptions.Singleline | RegexOptions.IgnoreCase;
+            var match = Regex.Match(value, regex, options);
+
+            return match.Success;
+          
+        }
+
+        private static bool ValidateNumber(string value, int min, int max)
+        {
+            try
+            {
+                int intValue = Convert.ToInt32(value);
+                if (intValue >= min && intValue <= max) return true;
+            }
+
+            catch
+            {
+                return false;
+            }
+
+            return false;
+        }
+
+        private static bool ValidatePasswordProperty(string passport, PasswordProperty property)
+        {
+            return false;
+        }
+
+
+        private static string GetPropertyValue(string passport, PasswordProperty property)
+        {
+            string regex = "(?<property>" + property + ")(?<sep>:)(?<value>#?\\w*)";
+            RegexOptions options = RegexOptions.Singleline | RegexOptions.IgnoreCase;
+            var match = Regex.Match(passport, regex, options);
+
+            return match.Groups["value"].Value;
+        }
+    }
+
+
+    class Program
+    {
+        static void Main(string[] args)
+        {
+            string lines = File.ReadAllText("AOC-2020-Day4-Input.txt");
+
+            // Split into individual passports
+            string[] passports = lines.Split(new string[] {Environment.NewLine + Environment.NewLine},
+                StringSplitOptions.RemoveEmptyEntries);
+
+            int numValid = 0;
+
+            foreach (string passport in passports)
+            {
+                
+                if (PassportTools.ValidatePassport(passport)) numValid++;
+
+            }
+
+            Console.WriteLine(numValid);
+
+            Console.ReadLine();
+
+
+
+
+        }
+    }
+}
