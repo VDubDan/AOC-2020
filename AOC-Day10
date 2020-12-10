@@ -1,0 +1,193 @@
+using System;
+using System.Collections.Generic;
+using System.IO;
+
+namespace AOC_2020_Day10
+{
+    class Program
+    {
+
+        static void Main(string[] args)
+        {
+            int startJolts = 0;
+            int[] adapterRatings = new int[] {1, 2, 3};
+
+            string[] input = File.ReadAllLines("AOC-2020-Day10-Input.txt");
+
+            // Convert input to list of int
+            List<int> adapterList = new List<int>();
+
+            foreach (string adapter in input)
+            {
+                adapterList.Add(Convert.ToInt32(adapter));
+            }
+
+            int currentJolts = startJolts;
+
+            // Keep track of our ordering
+            List<int> orderedAdapters = new List<int>();
+
+            int diffThree = 0;
+            int diffOne = 0;
+
+            while (adapterList.Count > 0)
+            {
+
+                foreach (int rating in adapterRatings)
+                {
+                    int index = adapterList.IndexOf(currentJolts + rating );
+
+                    // Search succesful
+                    if (index > -1)
+                    {
+                        if (rating == 1) diffOne++;
+                        if (rating == 3) diffThree++;
+
+                        Console.WriteLine(adapterList[index]);
+
+                        orderedAdapters.Add(adapterList[index]);
+                        currentJolts = adapterList[index];
+                        adapterList.RemoveAt(index);
+                        break;
+                    }
+
+                }
+
+            }
+
+            // Account for the device
+            diffThree++;
+            int answer = diffOne * diffThree;
+
+            Console.WriteLine(diffOne + " differences of 1");
+            Console.WriteLine(diffThree + " differences of 3");
+
+            Console.WriteLine("Answer: " + answer);
+           // Console.ReadLine();
+
+
+            // Part 2 Below Here
+
+            List<int> partTwoAdapterList = new List<int>();
+
+            // Create new adapter list
+            foreach (string adapter in input)
+            {
+                partTwoAdapterList.Add(Convert.ToInt32(adapter));
+            }
+
+            // Sort the list
+            partTwoAdapterList.Sort();
+
+            int largestAdapter = partTwoAdapterList[partTwoAdapterList.Count-1];
+
+
+            List<List<int>> possibleCombinationsList = new List<List<int>>();
+
+            
+
+            // Start our first possible combination
+            List<int> firstCombination = new List<int>();
+            firstCombination.Add(0);
+
+            possibleCombinationsList.Add(firstCombination);
+
+            bool madeChanges = true;
+
+            while (madeChanges)
+            {
+                madeChanges = false;
+
+                // Iterate through all of our current possible combinations
+                for (int listPosition = 0; listPosition < possibleCombinationsList.Count; listPosition++)
+                {
+                    List<int> possibleCombination = possibleCombinationsList[listPosition];
+
+                    // Take the last value in the possible combination
+                    int lastValue = possibleCombination[possibleCombination.Count-1];
+
+                    // See if this branch is complete
+                    if (lastValue == largestAdapter) continue;
+
+                    List<int> possibleNextAdapters = new List<int>();
+
+                    // See if we can find any adapters which fit
+                    foreach (int rating in adapterRatings)
+                    {
+                        int index = partTwoAdapterList.IndexOf(lastValue + rating);
+                            
+                        // Search succesful
+                        if (index > -1)
+                        {
+                            possibleNextAdapters.Add(partTwoAdapterList[index]);
+                        }
+
+                    }
+
+                    // No adapters matches, that's the end of this branch
+                    if (possibleNextAdapters.Count == 0)
+                    {
+                        madeChanges = true;
+
+                        // Delete this branch, it's broken
+                        possibleCombinationsList.RemoveAt(listPosition);
+                    }
+
+                    // Just one possibility
+                    if (possibleNextAdapters.Count == 1)
+                    {
+                        madeChanges = true;
+
+                        // Add the matched adapter to the list
+                        possibleCombination.Add(possibleNextAdapters[0]);
+                    }
+
+                    // Multiple possibilities, need to create branches
+                    if (possibleNextAdapters.Count > 1)
+                    {
+                        madeChanges = true;
+
+                        int numPossibleNextMoves = possibleNextAdapters.Count;
+
+                        foreach (int nextAdapter in possibleNextAdapters)
+                        {
+                            // Make an unreferenced copy
+                            List<int> newBranch = new List<int>(possibleCombinationsList[listPosition]);
+       
+                            newBranch.Add(nextAdapter);
+                            possibleCombinationsList.Add(newBranch);
+                        }
+
+                        // Delete the current branch
+                        possibleCombinationsList.RemoveAt(listPosition);
+                    }
+
+
+                }
+
+
+            }
+
+            /*
+            Console.WriteLine("Possible Combinations: ");
+
+            foreach (List<int> possibleCombination in possibleCombinationsList)
+            {
+                foreach (int adapter in possibleCombination)
+                {
+                    Console.Write(adapter + ";");
+                }
+
+                Console.Write(Environment.NewLine);
+            }
+            */
+
+            Console.WriteLine("Total Combinations:" + possibleCombinationsList.Count);
+
+            Console.ReadLine();
+
+        }
+
+
+    }
+}
